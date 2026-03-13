@@ -15,7 +15,7 @@ from typing import Any, Callable
 
 from deepeval.benchmarks import GSM8K, MMLU, TruthfulQA
 from deepeval.benchmarks.modes import TruthfulQAMode
-from deepeval.benchmarks.tasks import MMLUTask
+from deepeval.benchmarks.tasks import MMLUTask, TruthfulQATask
 from deepeval.models import DeepEvalBaseLLM
 from dotenv import load_dotenv
 from tabulate import tabulate
@@ -218,6 +218,41 @@ def resolve_mmlu_tasks(task_names: list[str]) -> list[Any] | None:
     return unique_tasks
 
 
+def resolve_truthfulqa_tasks(task_names: list[str]) -> list[Any] | None:
+    """TruthfulQA タスク名を enum に変換する"""
+    if not task_names:
+        return None
+
+    resolved_tasks: list[Any] = []
+    invalid_tasks: list[str] = []
+
+    for task_name in task_names:
+        member = resolve_enum_member(TruthfulQATask, task_name)
+        if member is None:
+            invalid_tasks.append(task_name)
+        else:
+            resolved_tasks.append(member)
+
+    if invalid_tasks:
+        print(f"  [警告] 不明な TruthfulQA タスク: {', '.join(invalid_tasks)}")
+
+    if not resolved_tasks:
+        raise ValueError(
+            "TRUTHFULQA_TASKS に有効なタスクが 1 つもありません。"
+            "タスク名を見直してください。"
+        )
+
+    unique_tasks: list[Any] = []
+    seen_names: set[str] = set()
+
+    for task in resolved_tasks:
+        if task.name not in seen_names:
+            seen_names.add(task.name)
+            unique_tasks.append(task)
+
+    return unique_tasks
+
+
 def create_mmlu_benchmark() -> MMLU:
     """環境変数に基づいて MMLU ベンチマークを生成する"""
     task_names = get_env_list("MMLU_TASKS")
@@ -247,7 +282,14 @@ def create_truthfulqa_benchmark() -> TruthfulQA:
             f"現在の値: {mode_str}"
         )
 
-    return build_instance(TruthfulQA, {"mode": mode})
+    kwargs: dict[str, Any] = {"mode": mode}
+
+    task_names = get_env_list("TRUTHFULQA_TASKS")
+    tasks = resolve_truthfulqa_tasks(task_names)
+    if tasks is not None:
+        kwargs["tasks"] = tasks
+
+    return build_instance(TruthfulQA, kwargs)
 
 
 def create_gsm8k_benchmark() -> GSM8K:

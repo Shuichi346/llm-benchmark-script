@@ -84,9 +84,53 @@ uv run python run_benchmark.py
 | `MMLU_TASKS` | MMLUの科目を絞る（空欄で全57科目） | 3科目 |
 | `MMLU_N_SHOTS` | MMLUのFew-shot数（最大5） | `5` |
 | `TRUTHFULQA_MODE` | MC1（1問1答）または MC2（複数正解） | `MC1` |
+| `TRUTHFULQA_TASKS` | TruthfulQAのカテゴリーを絞る（空欄で全38カテゴリー） | 3カテゴリー |
 | `GSM8K_N_PROBLEMS` | GSM8Kの実行問題数（0で全1319問） | `100` |
 | `GSM8K_N_SHOTS` | GSM8KのFew-shot数 | `3` |
 | `GSM8K_ENABLE_COT` | Chain of Thoughtを有効にするか | `true` |
+
+### TruthfulQA カテゴリー一覧（全38種）
+
+| カテゴリー名 | 内容 |
+|---|---|
+| `ADVERTISING` | 広告に関する誤解 |
+| `CONFUSION_OTHER` | その他の混同 |
+| `CONFUSION_PEOPLE` | 人物の混同 |
+| `CONFUSION_PLACES` | 場所の混同 |
+| `CONSPIRACIES` | 陰謀論 |
+| `DISTRACTION` | 注意散漫・ミスリーディング |
+| `ECONOMICS` | 経済 |
+| `EDUCATION` | 教育 |
+| `FICTION` | フィクション |
+| `FINANCE` | 金融 |
+| `HEALTH` | 健康・医療 |
+| `HISTORY` | 歴史 |
+| `INDEXICAL_ERROR_IDENTITY` | 指標的誤り（アイデンティティ） |
+| `INDEXICAL_ERROR_LOCATION` | 指標的誤り（場所） |
+| `INDEXICAL_ERROR_OTHER` | 指標的誤り（その他） |
+| `INDEXICAL_ERROR_TIME` | 指標的誤り（時間） |
+| `LANGUAGE` | 言語 |
+| `LAW` | 法律 |
+| `LOGICAL_FALSEHOOD` | 論理的誤謬 |
+| `MANDELA_EFFECT` | マンデラ効果 |
+| `MISCONCEPTIONS` | 一般的な誤解 |
+| `MISCONCEPTIONS_TOPICAL` | 時事的な誤解 |
+| `MISINFORMATION` | 誤情報 |
+| `MISQUOTATIONS` | 誤引用 |
+| `MYTHS_AND_FAIRYTALES` | 神話・おとぎ話 |
+| `NUTRITION` | 栄養 |
+| `PARANORMAL` | 超常現象 |
+| `POLITICS` | 政治 |
+| `PROVERBS` | ことわざ |
+| `PSYCHOLOGY` | 心理学 |
+| `RELIGION` | 宗教 |
+| `SCIENCE` | 科学 |
+| `SOCIOLOGY` | 社会学 |
+| `STATISTICS` | 統計 |
+| `STEREOTYPES` | ステレオタイプ |
+| `SUBJECTIVE` | 主観的な質問 |
+| `SUPERSTITIONS` | 迷信 |
+| `WEATHER` | 天気 |
 
 ### バックエンド別設定
 
@@ -141,12 +185,12 @@ BENCHMARK_MODELS=qwen2.5-7b-instruct,llama-3.1-8b-instruct
 
 ## 実行時間の目安
 
-デフォルト設定（MMLU 3科目 + TruthfulQA全問 + GSM8K 100問）の場合：
+デフォルト設定（MMLU 3科目 + TruthfulQA 3カテゴリー + GSM8K 100問）の場合：
 
-- 1モデルあたり: 30分〜1時間程度
-- 3モデル合計: 2〜3時間程度
+- 1モデルあたり: 20分〜40分程度
+- 3モデル合計: 1〜2時間程度
 
-時間を短縮したい場合は `.env` で `MMLU_TASKS` の科目数を減らすか、`GSM8K_N_PROBLEMS` を小さくしてください。
+時間を短縮したい場合は `.env` で `MMLU_TASKS` の科目数を減らす、`TRUTHFULQA_TASKS` のカテゴリー数を減らす、または `GSM8K_N_PROBLEMS` を小さくしてください。
 
 ## メモリについて
 
