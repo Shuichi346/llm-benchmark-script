@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# 仮想環境
+.venv/
+
+# uv
+uv.lock
+
+# 環境変数（ローカル上書き用）
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# deepeval
+.deepeval/
+
+# ベンチマーク結果（容量が大きくなるため）
+results/*.json
+!results/.gitkeep
