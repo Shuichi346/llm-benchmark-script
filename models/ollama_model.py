@@ -21,7 +21,7 @@ def _get_base_url() -> str:
     return base_url
 
 
-def check_ollama_connection(base_url: str) -> bool:
+def _check_connection(base_url: str) -> bool:
     """Ollama サーバーへの接続を確認する"""
     try:
         req = urllib.request.Request(f"{base_url}/api/tags", method="GET")
@@ -31,7 +31,9 @@ def check_ollama_connection(base_url: str) -> bool:
         return False
 
 
-def check_model_available(base_url: str, model_name: str) -> tuple[bool, str]:
+def _check_model_available(
+    base_url: str, model_name: str
+) -> tuple[bool, str]:
     """Ollama にモデルが存在し、ロード可能かテスト生成で確認する"""
     try:
         payload = json_mod.dumps({
@@ -96,7 +98,7 @@ def preflight_check_ollama(model_names: list[str]) -> list[str]:
     """Ollama 接続とモデルの動作を事前確認し、有効なモデル一覧を返す"""
     base_url = _get_base_url()
 
-    if not check_ollama_connection(base_url):
+    if not _check_connection(base_url):
         print(f"[エラー] Ollama ({base_url}) に接続できません。")
         print("  → Ollama が起動しているか確認してください: ollama serve")
         sys.exit(1)
@@ -107,7 +109,7 @@ def preflight_check_ollama(model_names: list[str]) -> list[str]:
 
     for model_name in model_names:
         print(f"  モデル確認中: {model_name} ...", end=" ", flush=True)
-        ok, error_msg = check_model_available(base_url, model_name)
+        ok, error_msg = _check_model_available(base_url, model_name)
 
         if ok:
             print("OK")

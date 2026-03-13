@@ -5,7 +5,6 @@ LLM_BACKEND の値に応じて Ollama / LM Studio の処理を振り分ける。
 """
 
 import sys
-from typing import Any
 
 from deepeval.models import DeepEvalBaseLLM
 

@@ -33,7 +33,9 @@ def _extract_answer(text: str) -> str:
         return ""
 
     # 特殊トークンと前後の空白を除去
-    cleaned = re.sub(r"<\|[a-z_]+\|>", "", text, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(
+        r"<\|[a-z_]+\|>", "", text, flags=re.IGNORECASE
+    ).strip()
 
     if not cleaned:
         return ""
@@ -62,14 +64,15 @@ def _extract_answer(text: str) -> str:
         num_str = number_match.group(1).replace(",", "")
         return num_str
 
-    # どのパターンにも該当しない場合は、クリーニング済みテキストをそのまま返す
-    # （deepeval 側で不一致→不正解として処理される）
+    # どのパターンにも該当しない場合はクリーニング済みテキストを返す
     return cleaned
 
 
 def _get_base_url() -> str:
     """LM Studio のベース URL を取得する"""
-    base_url = os.getenv("LMSTUDIO_BASE_URL", "http://localhost:1234/v1").strip()
+    base_url = os.getenv(
+        "LMSTUDIO_BASE_URL", "http://localhost:1234/v1"
+    ).strip()
     if not base_url:
         base_url = "http://localhost:1234/v1"
     return base_url
@@ -77,7 +80,9 @@ def _get_base_url() -> str:
 
 def _get_api_key() -> str:
     """LM Studio の API キーを取得する（通常はダミーで良い）"""
-    return os.getenv("LMSTUDIO_API_KEY", "lm-studio").strip() or "lm-studio"
+    return (
+        os.getenv("LMSTUDIO_API_KEY", "lm-studio").strip() or "lm-studio"
+    )
 
 
 class LMStudioModel(DeepEvalBaseLLM):
@@ -117,10 +122,12 @@ def create_lmstudio_model(model_name: str) -> LMStudioModel:
     """LMStudioModel インスタンスを生成する"""
     base_url = _get_base_url()
     api_key = _get_api_key()
-    return LMStudioModel(model_name=model_name, base_url=base_url, api_key=api_key)
+    return LMStudioModel(
+        model_name=model_name, base_url=base_url, api_key=api_key
+    )
 
 
-def _check_lmstudio_connection(base_url: str) -> bool:
+def _check_connection(base_url: str) -> bool:
     """LM Studio サーバーへの接続を確認する"""
     try:
         models_url = f"{base_url}/models"
@@ -168,10 +175,12 @@ def preflight_check_lmstudio(model_names: list[str]) -> list[str]:
     base_url = _get_base_url()
     api_key = _get_api_key()
 
-    if not _check_lmstudio_connection(base_url):
+    if not _check_connection(base_url):
         print(f"[エラー] LM Studio ({base_url}) に接続できません。")
         print("  → LM Studio を起動し、ローカルサーバーを開始してください。")
-        print("  → LM Studio の「Developer」タブで Server を Start してください。")
+        print(
+            "  → LM Studio の「Developer」タブで Server を Start してください。"
+        )
         sys.exit(1)
 
     print(f"  LM Studio 接続OK: {base_url}")
@@ -180,7 +189,9 @@ def preflight_check_lmstudio(model_names: list[str]) -> list[str]:
 
     for model_name in model_names:
         print(f"  モデル確認中: {model_name} ...", end=" ", flush=True)
-        ok, error_msg = _check_model_available(base_url, model_name, api_key)
+        ok, error_msg = _check_model_available(
+            base_url, model_name, api_key
+        )
 
         if ok:
             print("OK")
@@ -190,7 +201,8 @@ def preflight_check_lmstudio(model_names: list[str]) -> list[str]:
             print(f"    → {error_msg}")
             print(f"    → このモデルはスキップします。")
             print(
-                f"    → LM Studio でこのモデルがロードされているか確認してください。"
+                f"    → LM Studio でこのモデルがロードされているか"
+                f"確認してください。"
             )
 
     return valid_models
