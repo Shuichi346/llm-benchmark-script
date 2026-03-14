@@ -220,6 +220,13 @@ LM Studio を起動し、「Developer」タブからローカルサーバーを 
 python run_benchmark.py
 ```
 
+または、
+
+
+```bash
+uv run run_benchmark.py
+```
+
 または、パッケージとしてインストール済みの場合は以下のコマンドでも実行できます。
 
 ```bash
