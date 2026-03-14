@@ -220,6 +220,12 @@ All settings are managed through the `.env` file. Below is a list of configurati
 python run_benchmark.py
 ```
 
+Or,
+
+```bash
+uv run run_benchmark.py
+```
+
 Or, if installed as a package, you can also run with the following command:
 
 ```bash
