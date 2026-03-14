@@ -7,76 +7,129 @@
   </thead>
 </table>
 
-# llm-benchmark-script
+# LLM Benchmark Script
 
-A tool to evaluate and compare local LLMs running on Ollama or LM Studio under identical conditions using deepeval's public benchmarks (MMLU, TruthfulQA, GSM8K).
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
+![deepeval](https://img.shields.io/badge/deepeval-3.8+-00B4D8)
+![License](https://img.shields.io/badge/License-[MIT]-blue)
+![Version](https://img.shields.io/badge/version-0.3.0-green)
 
-## Purpose
+A command-line tool that evaluates and compares local LLMs running on **Ollama** or **LM Studio** under identical conditions using **deepeval**'s public benchmarks (MMLU, TruthfulQA, GSM8K).
 
-To compare Qwen3.5-9B (original) with its Uncensored versions (Q4_K_M / Q8_0) and numerically confirm performance degradation caused by uncensoring.
+Execute benchmarks in batch for multiple models, display comparison tables in the terminal, and save results in JSON format.
 
-## Supported Backends
+---
 
-| Backend | Description | API |
+## Table of Contents
+
+- [Features](#features)
+- [Supported Benchmarks](#supported-benchmarks)
+- [Technology Stack](#technology-stack)
+- [Requirements](#requirements)
+- [Setup](#setup)
+- [Environment Variable Configuration](#environment-variable-configuration)
+- [Usage](#usage)
+- [Output Examples](#output-examples)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+
+---
+
+## Features
+
+- **Multi-backend Support** — Supports both Ollama and LM Studio, switchable with a single environment variable
+- **Three Standard Benchmarks** — Supports MMLU (knowledge), TruthfulQA (fact verification), and GSM8K (mathematical reasoning)
+- **Flexible Configuration** — Fine-grained control of subjects, categories, number of problems, few-shot counts, etc., via `.env` file
+- **Multi-model Batch Comparison** — Sequentially evaluates multiple models under identical conditions and automatically generates comparison tables
+- **Pre-check Functionality** — Automatically verifies server connections and model availability before benchmark execution
+- **Result Persistence** — Saves all results (including task-specific scores) to timestamped JSON files
+- **Localized CLI Output** — Displays clear comparison tables in the terminal
+
+---
+
+## Supported Benchmarks
+
+| Benchmark | Overview | Evaluation Content |
 |---|---|---|
-| **Ollama** | Uses Ollama's native API | `http://localhost:11434` |
-| **LM Studio** | Uses OpenAI-compatible API | `http://localhost:1234/v1` |
+| **MMLU** | Massive Multitask Language Understanding | Knowledge and comprehension across 57 subjects (Few-shot supported) |
+| **TruthfulQA** | Truthful Question Answering | Factually accurate response capability (MC1/MC2 modes) |
+| **GSM8K** | Grade School Math 8K | Elementary-level math word problems (Chain of Thought supported) |
 
-## Prerequisites
+---
 
-- macOS (Apple Silicon supported)
-- Python 3.12 or higher
-- [uv](https://docs.astral.sh/uv/) installed
-- **When using Ollama**: [Ollama](https://ollama.com/) installed and running
-- **When using LM Studio**: [LM Studio](https://lmstudio.ai/) installed with local server running
+## Technology Stack
+
+| Category | Technology |
+|---|---|
+| Language | Python 3.12+ |
+| Benchmark Framework | deepeval (≥3.8.0) |
+| LLM Backend | Ollama (ollama ≥0.4.0) / LM Studio (openai ≥1.0.0) |
+| Configuration Management | python-dotenv (≥1.0.0) |
+| Table Display | tabulate (≥0.9.0) |
+
+---
+
+## Requirements
+
+- **Python 3.12** or higher
+- **Ollama** or **LM Studio** running locally
+- Target models must be pre-downloaded and loaded
+
+---
 
 ## Setup
 
+### 1. Clone the Repository
+
 ```bash
-# 1. Clone repository or navigate to directory
+git clone [Insert repository URL here]
 cd llm-benchmark-script
+```
 
-# 2. Install dependencies (virtual environment is automatically created)
+### 2. Install Dependencies
+
+**Using uv (recommended):**
+
+```bash
 uv sync
+```
 
-# 3. Create configuration file
+**Using pip:**
+
+```bash
+pip install .
+```
+
+### 3. Create Environment Variables File
+
+```bash
 cp .env.example .env
-# Open .env and configure LLM_BACKEND and model names
 ```
 
-### For Ollama
+Edit the copied `.env` file and adjust settings according to your backend and models.
+
+### 4. Prepare LLM Backend
+
+**For Ollama:**
 
 ```bash
-# Download models with Ollama (if not already downloaded)
-ollama pull qwen3.5:9b
-ollama pull hf.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q4_K_M
-ollama pull hf.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q8_0
+# Start Ollama server
+ollama serve
+
+# Download models (example)
+ollama pull qwen3:8b
 ```
 
-### For LM Studio
+**For LM Studio:**
 
-1. Launch LM Studio and download/load the desired models
-2. Open the "Developer" tab and start the local server (Start Server)
-3. Change `LLM_BACKEND` in `.env` to `lmstudio`
-4. Set `BENCHMARK_MODELS` to the LM Studio model identifiers (use the names displayed in LM Studio's UI)
+Start LM Studio and launch the local server from the "Developer" tab. Target models must be pre-loaded.
 
-## Usage
+---
 
-```bash
-# Activate virtual environment and run
-source .venv/bin/activate
-python run_benchmark.py
-```
+## Environment Variable Configuration
 
-Or run directly with `uv run`:
-
-```bash
-uv run python run_benchmark.py
-```
-
-## Configuration (.env)
-
-Edit the `.env` file to freely change backends, models, and benchmarks.
+All settings are managed through the `.env` file. Below is a list of configuration items.
 
 ### Basic Settings
 
@@ -90,13 +143,29 @@ Edit the `.env` file to freely change backends, models, and benchmarks.
 
 | Environment Variable | Description | Default |
 |---|---|---|
-| `MMLU_TASKS` | Limit MMLU subjects (empty for all 57 subjects) | 3 subjects |
-| `MMLU_N_SHOTS` | Number of few-shots for MMLU (max 5) | `5` |
-| `TRUTHFULQA_MODE` | MC1 (single answer) or MC2 (multiple correct answers) | `MC1` |
-| `TRUTHFULQA_TASKS` | Limit TruthfulQA categories (empty for all 38 categories) | 3 categories |
-| `GSM8K_N_PROBLEMS` | Number of GSM8K problems to run (0 for all 1319 problems) | `100` |
-| `GSM8K_N_SHOTS` | Number of few-shots for GSM8K | `3` |
+| `MMLU_TASKS` | Filter MMLU subjects (empty for all 57 subjects) | 3 subjects |
+| `MMLU_N_SHOTS` | MMLU few-shot count (max 5) | `5` |
+| `TRUTHFULQA_MODE` | MC1 (single answer) or MC2 (multiple correct) | `MC1` |
+| `TRUTHFULQA_TASKS` | Filter TruthfulQA categories (empty for all 38 categories) | 3 categories |
+| `GSM8K_N_PROBLEMS` | Number of GSM8K problems to run (0 for all 1319) | `100` |
+| `GSM8K_N_SHOTS` | GSM8K few-shot count | `3` |
 | `GSM8K_ENABLE_COT` | Enable Chain of Thought | `true` |
+
+### Backend-specific Settings
+
+| Environment Variable | Description | Default |
+|---|---|---|
+| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
+| `LMSTUDIO_BASE_URL` | LM Studio server URL (including /v1) | `http://localhost:1234/v1` |
+| `LMSTUDIO_API_KEY` | LM Studio API key (dummy acceptable) | `lm-studio` |
+
+### deepeval Timeout Settings
+
+| Environment Variable | Description | Default |
+|---|---|---|
+| `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE` | Maximum wait time per problem (seconds) | `900` |
+| `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE` | Maximum wait time per API call (seconds) | `600` |
+| `DEEPEVAL_RETRY_MAX_ATTEMPTS` | Retry count | `2` |
 
 ### TruthfulQA Categories (All 38 Types)
 
@@ -141,69 +210,113 @@ Edit the `.env` file to freely change backends, models, and benchmarks.
 | `SUPERSTITIONS` | Superstitions |
 | `WEATHER` | Weather |
 
-### Backend-Specific Settings
+---
 
-| Environment Variable | Description | Default |
-|---|---|---|
-| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
-| `LMSTUDIO_BASE_URL` | LM Studio server URL (including /v1) | `http://localhost:1234/v1` |
-| `LMSTUDIO_API_KEY` | LM Studio API key (dummy is fine) | `lm-studio` |
+## Usage
 
-### How to Check Model Names in LM Studio
+### Basic Execution
 
-When you start the server in LM Studio's "Developer" tab, the identifier of the loaded model will be displayed. Set that string in `BENCHMARK_MODELS`.
-
-Example:
-```env
-LLM_BACKEND=lmstudio
-BENCHMARK_MODELS=qwen2.5-7b-instruct,llama-3.1-8b-instruct
+```bash
+python run_benchmark.py
 ```
 
-## Benchmark Descriptions
+Or, if installed as a package, you can also run with the following command:
 
-| Benchmark | Content | Scoring Method |
-|---|---|---|
-| **MMLU** | 57-subject knowledge multiple choice (history, law, science, etc.) | Exact match with correct letter (A/B/C/D) |
-| **TruthfulQA** | 817 misleading questions to test if the model lies | MC1: exact match / MC2: correct identification rate |
-| **GSM8K** | Elementary-level math word problems (2-8 step reasoning) | Exact match with correct numerical answer |
+```bash
+llm-benchmark
+```
 
-## Output
+### Execution Flow
 
-### Terminal
+The tool processes in the following order:
 
-After completion, a comparison table is displayed:
+1. Load settings from `.env` file and perform validation
+2. Verify connection to specified backend (Ollama / LM Studio)
+3. Validate existence and load status of each model through test generation
+4. Execute all model × all benchmark combinations sequentially
+5. Save results to `results/` directory in JSON format
+6. Display comparison summary table and task-specific detail tables in terminal
+
+### Interrupting Execution
+
+You can safely interrupt at any time with `Ctrl+C`.
+
+---
+
+## Output Examples
+
+### Terminal Output
 
 ```
+======================================================================
+ Local LLM Benchmark Comparison Tool
+======================================================================
+ Backend: Ollama
+ Target Models: 2
+   1. qwen3:8b
+   2. qwen3:4b
+ Benchmarks: MMLU, TruthfulQA, GSM8K
+ Server: http://localhost:11434
+======================================================================
+
 ======================================================================
  Benchmark Results Comparison (overall_score)
 ======================================================================
-+-----------------------------+--------+------+------------+
-| Model                       | GSM8K  | MMLU | TruthfulQA |
-+-----------------------------+--------+------+------------+
-| qwen3.5:9b                  | 0.7800 | 0.72 | 0.4521     |
-| ...Aggressive:Q4_K_M        | 0.7500 | 0.70 | 0.4103     |
-| ...Aggressive:Q8_0          | 0.7700 | 0.71 | 0.4456     |
-+-----------------------------+--------+------+------------+
++------------+--------+------------+--------+
+| Model      | MMLU   | TruthfulQA | GSM8K  |
++------------+--------+------------+--------+
+| qwen3:8b   | 0.7200 | 0.5400     | 0.8100 |
+| qwen3:4b   | 0.6500 | 0.4800     | 0.7200 |
++------------+--------+------------+--------+
 ```
 
-(The above values are fictional. Actual results vary by model)
+### JSON Output
 
-### JSON File
+Results are saved to `results/benchmark_YYYYMMDD_HHMMSS.json`. Includes timestamp, Python version, backend information, overall_score and task-specific scores for each model.
 
-Detailed results including task-specific scores are saved to `results/benchmark_YYYYMMDD_HHMMSS.json`.
+---
 
-## Estimated Runtime
+## Project Structure
 
-With default settings (MMLU 3 subjects + TruthfulQA 3 categories + GSM8K 100 problems):
+```
+llm-benchmark-script/
+├── run_benchmark.py     # Main entry point
+├── config.py            # Environment variable loading/validation
+├── benchmarks.py        # Benchmark generation/execution logic
+├── reporting.py         # Result saving/table display
+├── models/
+│   ├── __init__.py      # Backend routing interface
+│   ├── ollama_model.py  # Ollama backend implementation
+│   └── lmstudio_model.py  # LM Studio backend implementation
+├── results/             # Benchmark results storage (JSON)
+│   └── .gitkeep
+├── .env.example         # Environment variable template
+├── pyproject.toml       # Project settings/dependencies
+├── .python-version      # Python version specification
+└── .gitignore
+```
 
-- Per model: 20-40 minutes
-- 3 models total: 1-2 hours
+---
 
-To reduce time, decrease the number of subjects in `MMLU_TASKS`, reduce categories in `TRUTHFULQA_TASKS`, or make `GSM8K_N_PROBLEMS` smaller in `.env`.
+## Troubleshooting
 
-## Memory Usage
+### Cannot Connect to Server
 
-Ollama loads models one at a time into memory and automatically unloads them when switching to another model. LM Studio similarly only consumes memory for the currently loaded model. Works fine with 24GB unified memory (using at most about 10GB for the Q8_0 version).
+For Ollama, check if the server is running with `ollama serve`. For LM Studio, verify that the local server is started from the "Developer" tab.
+
+### Models Are Skipped
+
+The specified model may not be downloaded or loaded in the backend. For Ollama, check with `ollama list`; for LM Studio, verify model status in the app.
+
+### Timeouts Occur
+
+Local LLMs can take time to respond. Increase the values of `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE` and `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE` in `.env`. For 9B-class models, 600-900 seconds is recommended.
+
+### Full Subject/Category Execution Takes Too Long
+
+MMLU has 57 subjects, TruthfulQA has 38 categories (817 questions), and GSM8K has 1319 problems. For initial runs, we recommend filtering with `MMLU_TASKS`, `TRUTHFULQA_TASKS`, and `GSM8K_N_PROBLEMS`.
+
+---
 
 ## License
 
