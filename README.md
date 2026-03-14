@@ -1,175 +1,184 @@
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:center"><a href="README_en.md">English</a></th>
+      <th style="text-align:center">日本語</th>
+    </tr>
+  </thead>
+</table>
+
 # llm-benchmark-script
 
-deepeval の公開ベンチマーク（MMLU, TruthfulQA, GSM8K）を使い、Ollama または LM Studio で動作するローカル LLM を同一条件で評価・比較するツールです。
+A tool to evaluate and compare local LLMs running on Ollama or LM Studio under identical conditions using deepeval's public benchmarks (MMLU, TruthfulQA, GSM8K).
 
-## 目的
+## Purpose
 
-Qwen3.5-9B（本家）と、そのUncensored版（Q4_K_M / Q8_0）を比較し、Uncensored化による性能劣化を数値で確認します。
+To compare Qwen3.5-9B (original) with its Uncensored versions (Q4_K_M / Q8_0) and numerically confirm performance degradation caused by uncensoring.
 
-## 対応バックエンド
+## Supported Backends
 
-| バックエンド | 説明 | API |
+| Backend | Description | API |
 |---|---|---|
-| **Ollama** | Ollama のネイティブ API を使用 | `http://localhost:11434` |
-| **LM Studio** | OpenAI 互換 API を使用 | `http://localhost:1234/v1` |
+| **Ollama** | Uses Ollama's native API | `http://localhost:11434` |
+| **LM Studio** | Uses OpenAI-compatible API | `http://localhost:1234/v1` |
 
-## 前提条件
+## Prerequisites
 
-- macOS（Apple Silicon 対応）
-- Python 3.12 以上
-- [uv](https://docs.astral.sh/uv/) がインストール済み
-- **Ollama 使用時**: [Ollama](https://ollama.com/) がインストール済みで起動中
-- **LM Studio 使用時**: [LM Studio](https://lmstudio.ai/) がインストール済みで、ローカルサーバーが起動中
+- macOS (Apple Silicon supported)
+- Python 3.12 or higher
+- [uv](https://docs.astral.sh/uv/) installed
+- **When using Ollama**: [Ollama](https://ollama.com/) installed and running
+- **When using LM Studio**: [LM Studio](https://lmstudio.ai/) installed with local server running
 
-## セットアップ
+## Setup
 
 ```bash
-# 1. リポジトリをクローン or ディレクトリに移動
+# 1. Clone repository or navigate to directory
 cd llm-benchmark-script
 
-# 2. 依存パッケージをインストール（仮想環境も自動作成される）
+# 2. Install dependencies (virtual environment is automatically created)
 uv sync
 
-# 3. 設定ファイルを作成
+# 3. Create configuration file
 cp .env.example .env
-# .env を開いて LLM_BACKEND やモデル名を設定する
+# Open .env and configure LLM_BACKEND and model names
 ```
 
-### Ollama の場合
+### For Ollama
 
 ```bash
-# Ollama でモデルを取得（未取得の場合）
+# Download models with Ollama (if not already downloaded)
 ollama pull qwen3.5:9b
 ollama pull hf.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q4_K_M
 ollama pull hf.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q8_0
 ```
 
-### LM Studio の場合
+### For LM Studio
 
-1. LM Studio を起動し、使いたいモデルをダウンロード・ロードする
-2. 「Developer」タブを開き、ローカルサーバーを起動（Start Server）する
-3. `.env` の `LLM_BACKEND` を `lmstudio` に変更する
-4. `BENCHMARK_MODELS` に LM Studio のモデル識別子を設定する（LM Studio の UI に表示される名前を使う）
+1. Launch LM Studio and download/load the desired models
+2. Open the "Developer" tab and start the local server (Start Server)
+3. Change `LLM_BACKEND` in `.env` to `lmstudio`
+4. Set `BENCHMARK_MODELS` to the LM Studio model identifiers (use the names displayed in LM Studio's UI)
 
-## 使い方
+## Usage
 
 ```bash
-# 仮想環境を有効化して実行
+# Activate virtual environment and run
 source .venv/bin/activate
 python run_benchmark.py
 ```
 
-または `uv run` で直接実行：
+Or run directly with `uv run`:
 
 ```bash
 uv run python run_benchmark.py
 ```
 
-## 設定（.env）
+## Configuration (.env)
 
-`.env` ファイルを編集して、バックエンド・モデル・ベンチマークを自由に変更できます。
+Edit the `.env` file to freely change backends, models, and benchmarks.
 
-### 基本設定
+### Basic Settings
 
-| 環境変数 | 説明 | デフォルト |
+| Environment Variable | Description | Default |
 |---|---|---|
-| `LLM_BACKEND` | 使用するバックエンド（`ollama` or `lmstudio`） | `ollama` |
-| `BENCHMARK_MODELS` | 評価するモデル名（カンマ区切り） | Qwen3.5の3モデル |
-| `BENCHMARK_TYPES` | 実行するベンチマーク（カンマ区切り） | `MMLU,TruthfulQA,GSM8K` |
+| `LLM_BACKEND` | Backend to use (`ollama` or `lmstudio`) | `ollama` |
+| `BENCHMARK_MODELS` | Model names to evaluate (comma-separated) | 3 Qwen3.5 models |
+| `BENCHMARK_TYPES` | Benchmarks to run (comma-separated) | `MMLU,TruthfulQA,GSM8K` |
 
-### ベンチマーク設定
+### Benchmark Settings
 
-| 環境変数 | 説明 | デフォルト |
+| Environment Variable | Description | Default |
 |---|---|---|
-| `MMLU_TASKS` | MMLUの科目を絞る（空欄で全57科目） | 3科目 |
-| `MMLU_N_SHOTS` | MMLUのFew-shot数（最大5） | `5` |
-| `TRUTHFULQA_MODE` | MC1（1問1答）または MC2（複数正解） | `MC1` |
-| `TRUTHFULQA_TASKS` | TruthfulQAのカテゴリーを絞る（空欄で全38カテゴリー） | 3カテゴリー |
-| `GSM8K_N_PROBLEMS` | GSM8Kの実行問題数（0で全1319問） | `100` |
-| `GSM8K_N_SHOTS` | GSM8KのFew-shot数 | `3` |
-| `GSM8K_ENABLE_COT` | Chain of Thoughtを有効にするか | `true` |
+| `MMLU_TASKS` | Limit MMLU subjects (empty for all 57 subjects) | 3 subjects |
+| `MMLU_N_SHOTS` | Number of few-shots for MMLU (max 5) | `5` |
+| `TRUTHFULQA_MODE` | MC1 (single answer) or MC2 (multiple correct answers) | `MC1` |
+| `TRUTHFULQA_TASKS` | Limit TruthfulQA categories (empty for all 38 categories) | 3 categories |
+| `GSM8K_N_PROBLEMS` | Number of GSM8K problems to run (0 for all 1319 problems) | `100` |
+| `GSM8K_N_SHOTS` | Number of few-shots for GSM8K | `3` |
+| `GSM8K_ENABLE_COT` | Enable Chain of Thought | `true` |
 
-### TruthfulQA カテゴリー一覧（全38種）
+### TruthfulQA Categories (All 38 Types)
 
-| カテゴリー名 | 内容 |
+| Category Name | Content |
 |---|---|
-| `ADVERTISING` | 広告に関する誤解 |
-| `CONFUSION_OTHER` | その他の混同 |
-| `CONFUSION_PEOPLE` | 人物の混同 |
-| `CONFUSION_PLACES` | 場所の混同 |
-| `CONSPIRACIES` | 陰謀論 |
-| `DISTRACTION` | 注意散漫・ミスリーディング |
-| `ECONOMICS` | 経済 |
-| `EDUCATION` | 教育 |
-| `FICTION` | フィクション |
-| `FINANCE` | 金融 |
-| `HEALTH` | 健康・医療 |
-| `HISTORY` | 歴史 |
-| `INDEXICAL_ERROR_IDENTITY` | 指標的誤り（アイデンティティ） |
-| `INDEXICAL_ERROR_LOCATION` | 指標的誤り（場所） |
-| `INDEXICAL_ERROR_OTHER` | 指標的誤り（その他） |
-| `INDEXICAL_ERROR_TIME` | 指標的誤り（時間） |
-| `LANGUAGE` | 言語 |
-| `LAW` | 法律 |
-| `LOGICAL_FALSEHOOD` | 論理的誤謬 |
-| `MANDELA_EFFECT` | マンデラ効果 |
-| `MISCONCEPTIONS` | 一般的な誤解 |
-| `MISCONCEPTIONS_TOPICAL` | 時事的な誤解 |
-| `MISINFORMATION` | 誤情報 |
-| `MISQUOTATIONS` | 誤引用 |
-| `MYTHS_AND_FAIRYTALES` | 神話・おとぎ話 |
-| `NUTRITION` | 栄養 |
-| `PARANORMAL` | 超常現象 |
-| `POLITICS` | 政治 |
-| `PROVERBS` | ことわざ |
-| `PSYCHOLOGY` | 心理学 |
-| `RELIGION` | 宗教 |
-| `SCIENCE` | 科学 |
-| `SOCIOLOGY` | 社会学 |
-| `STATISTICS` | 統計 |
-| `STEREOTYPES` | ステレオタイプ |
-| `SUBJECTIVE` | 主観的な質問 |
-| `SUPERSTITIONS` | 迷信 |
-| `WEATHER` | 天気 |
+| `ADVERTISING` | Advertising misconceptions |
+| `CONFUSION_OTHER` | Other confusions |
+| `CONFUSION_PEOPLE` | People confusion |
+| `CONFUSION_PLACES` | Place confusion |
+| `CONSPIRACIES` | Conspiracy theories |
+| `DISTRACTION` | Distraction/misleading |
+| `ECONOMICS` | Economics |
+| `EDUCATION` | Education |
+| `FICTION` | Fiction |
+| `FINANCE` | Finance |
+| `HEALTH` | Health/medical |
+| `HISTORY` | History |
+| `INDEXICAL_ERROR_IDENTITY` | Indexical errors (identity) |
+| `INDEXICAL_ERROR_LOCATION` | Indexical errors (location) |
+| `INDEXICAL_ERROR_OTHER` | Indexical errors (other) |
+| `INDEXICAL_ERROR_TIME` | Indexical errors (time) |
+| `LANGUAGE` | Language |
+| `LAW` | Law |
+| `LOGICAL_FALSEHOOD` | Logical fallacies |
+| `MANDELA_EFFECT` | Mandela effect |
+| `MISCONCEPTIONS` | General misconceptions |
+| `MISCONCEPTIONS_TOPICAL` | Topical misconceptions |
+| `MISINFORMATION` | Misinformation |
+| `MISQUOTATIONS` | Misquotations |
+| `MYTHS_AND_FAIRYTALES` | Myths and fairy tales |
+| `NUTRITION` | Nutrition |
+| `PARANORMAL` | Paranormal |
+| `POLITICS` | Politics |
+| `PROVERBS` | Proverbs |
+| `PSYCHOLOGY` | Psychology |
+| `RELIGION` | Religion |
+| `SCIENCE` | Science |
+| `SOCIOLOGY` | Sociology |
+| `STATISTICS` | Statistics |
+| `STEREOTYPES` | Stereotypes |
+| `SUBJECTIVE` | Subjective questions |
+| `SUPERSTITIONS` | Superstitions |
+| `WEATHER` | Weather |
 
-### バックエンド別設定
+### Backend-Specific Settings
 
-| 環境変数 | 説明 | デフォルト |
+| Environment Variable | Description | Default |
 |---|---|---|
-| `OLLAMA_BASE_URL` | Ollama サーバーの URL | `http://localhost:11434` |
-| `LMSTUDIO_BASE_URL` | LM Studio サーバーの URL（/v1 含む） | `http://localhost:1234/v1` |
-| `LMSTUDIO_API_KEY` | LM Studio の API キー（ダミーで可） | `lm-studio` |
+| `OLLAMA_BASE_URL` | Ollama server URL | `http://localhost:11434` |
+| `LMSTUDIO_BASE_URL` | LM Studio server URL (including /v1) | `http://localhost:1234/v1` |
+| `LMSTUDIO_API_KEY` | LM Studio API key (dummy is fine) | `lm-studio` |
 
-### LM Studio でのモデル名の確認方法
+### How to Check Model Names in LM Studio
 
-LM Studio の「Developer」タブでサーバーを起動すると、ロード中のモデルの識別子が表示されます。その文字列を `BENCHMARK_MODELS` に設定してください。
+When you start the server in LM Studio's "Developer" tab, the identifier of the loaded model will be displayed. Set that string in `BENCHMARK_MODELS`.
 
-例：
+Example:
 ```env
 LLM_BACKEND=lmstudio
 BENCHMARK_MODELS=qwen2.5-7b-instruct,llama-3.1-8b-instruct
 ```
 
-## ベンチマークの説明
+## Benchmark Descriptions
 
-| ベンチマーク | 内容 | 採点方式 |
+| Benchmark | Content | Scoring Method |
 |---|---|---|
-| **MMLU** | 57科目の知識を問う多肢選択（歴史・法律・科学等） | 正解の文字（A/B/C/D）との完全一致 |
-| **TruthfulQA** | 誤解を誘う817問で嘘をつかないかを測定 | MC1: 完全一致 / MC2: 正解識別率 |
-| **GSM8K** | 小学校レベルの数学文章題（2〜8ステップの推論） | 正解の数値との完全一致 |
+| **MMLU** | 57-subject knowledge multiple choice (history, law, science, etc.) | Exact match with correct letter (A/B/C/D) |
+| **TruthfulQA** | 817 misleading questions to test if the model lies | MC1: exact match / MC2: correct identification rate |
+| **GSM8K** | Elementary-level math word problems (2-8 step reasoning) | Exact match with correct numerical answer |
 
-## 出力
+## Output
 
-### ターミナル
+### Terminal
 
-実行完了後、比較テーブルが表示されます：
+After completion, a comparison table is displayed:
 
 ```
 ======================================================================
- ベンチマーク結果比較（overall_score）
+ Benchmark Results Comparison (overall_score)
 ======================================================================
 +-----------------------------+--------+------+------------+
-| モデル                      | GSM8K  | MMLU | TruthfulQA |
+| Model                       | GSM8K  | MMLU | TruthfulQA |
 +-----------------------------+--------+------+------------+
 | qwen3.5:9b                  | 0.7800 | 0.72 | 0.4521     |
 | ...Aggressive:Q4_K_M        | 0.7500 | 0.70 | 0.4103     |
@@ -177,25 +186,25 @@ BENCHMARK_MODELS=qwen2.5-7b-instruct,llama-3.1-8b-instruct
 +-----------------------------+--------+------+------------+
 ```
 
-（上記は架空の値です。実際の結果はモデルにより異なります）
+(The above values are fictional. Actual results vary by model)
 
-### JSON ファイル
+### JSON File
 
-`results/benchmark_YYYYMMDD_HHMMSS.json` にタスク別スコアを含む詳細結果が保存されます。
+Detailed results including task-specific scores are saved to `results/benchmark_YYYYMMDD_HHMMSS.json`.
 
-## 実行時間の目安
+## Estimated Runtime
 
-デフォルト設定（MMLU 3科目 + TruthfulQA 3カテゴリー + GSM8K 100問）の場合：
+With default settings (MMLU 3 subjects + TruthfulQA 3 categories + GSM8K 100 problems):
 
-- 1モデルあたり: 20分〜40分程度
-- 3モデル合計: 1〜2時間程度
+- Per model: 20-40 minutes
+- 3 models total: 1-2 hours
 
-時間を短縮したい場合は `.env` で `MMLU_TASKS` の科目数を減らす、`TRUTHFULQA_TASKS` のカテゴリー数を減らす、または `GSM8K_N_PROBLEMS` を小さくしてください。
+To reduce time, decrease the number of subjects in `MMLU_TASKS`, reduce categories in `TRUTHFULQA_TASKS`, or make `GSM8K_N_PROBLEMS` smaller in `.env`.
 
-## メモリについて
+## Memory Usage
 
-Ollama はモデルを1つずつメモリにロードし、別のモデルを使う際は自動でアンロードします。LM Studio も同様に、ロード中のモデルのみメモリを消費します。24GB のユニファイドメモリで問題なく動作します（最大でも Q8_0 版の約10GB のみ使用）。
+Ollama loads models one at a time into memory and automatically unloads them when switching to another model. LM Studio similarly only consumes memory for the currently loaded model. Works fine with 24GB unified memory (using at most about 10GB for the Q8_0 version).
 
-## ライセンス
+## License
 
 MIT
