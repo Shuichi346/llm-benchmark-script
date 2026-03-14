@@ -1,7 +1,7 @@
 <table>
   <thead>
     <tr>
-      <th style="text-align:center"><a href="README_en.md">English</a></th>
+      <th style="text-align:center"><a href="README.md">English</a></th>
       <th style="text-align:center">日本語</th>
     </tr>
   </thead>
