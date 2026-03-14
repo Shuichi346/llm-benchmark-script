@@ -83,7 +83,7 @@
 ### 1. リポジトリのクローン
 
 ```bash
-git clone [ここにリポジトリURLを記述]
+git clone https://github.com/Shuichi346/llm-benchmark-script
 cd llm-benchmark-script
 ```
 
