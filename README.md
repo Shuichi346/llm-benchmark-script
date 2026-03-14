@@ -83,7 +83,7 @@ Execute benchmarks in batch for multiple models, display comparison tables in th
 ### 1. Clone the Repository
 
 ```bash
-git clone [Insert repository URL here]
+git clone https://github.com/Shuichi346/llm-benchmark-script
 cd llm-benchmark-script
 ```
 
