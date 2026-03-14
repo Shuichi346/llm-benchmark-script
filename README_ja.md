@@ -7,76 +7,62 @@
   </thead>
 </table>
 
-# llm-benchmark-script
+# ローカルLLMベンチマーク比較ツール
 
-deepeval の公開ベンチマーク（MMLU, TruthfulQA, GSM8K）を使い、Ollama または LM Studio で動作するローカル LLM を同一条件で評価・比較するツールです。
+[deepeval](https://github.com/confident-ai/deepeval) の公開ベンチマーク（MMLU, TruthfulQA, GSM8K）を使い、**Ollama** または **LM Studio** で動作する複数のローカルLLMモデルを同一条件で評価・比較するコマンドラインツールです。
 
-## 目的
+## 特徴
 
-Qwen3.5-9B（本家）と、そのUncensored版（Q4_K_M / Q8_0）を比較し、Uncensored化による性能劣化を数値で確認します。
+- **複数モデルの一括評価** — 指定した複数のモデルに対して、選択したベンチマークを順番に実行し、結果を横並びで比較できます。
+- **2つのバックエンドに対応** — Ollama と LM Studio（OpenAI互換API）のどちらでも利用可能です。
+- **3種類のベンチマーク** — MMLU（知識・推論）、TruthfulQA（真実性）、GSM8K（算数）に対応しています。
+- **柔軟な設定** — `.env` ファイルでモデル名、ベンチマーク種別、科目・カテゴリの絞り込み、問題数、タイムアウトなどを細かく制御できます。
+- **事前チェック機能** — ベンチマーク実行前にサーバーへの接続確認とモデルの動作確認を行い、問題があるモデルは自動的にスキップします。
+- **結果の保存と表示** — 実行結果をタイムスタンプ付きのJSONファイルに保存し、ターミナル上に比較テーブルとタスク別詳細テーブルを表示します。
 
-## 対応バックエンド
+## 動作要件
 
-| バックエンド | 説明 | API |
-|---|---|---|
-| **Ollama** | Ollama のネイティブ API を使用 | `http://localhost:11434` |
-| **LM Studio** | OpenAI 互換 API を使用 | `http://localhost:1234/v1` |
-
-## 前提条件
-
-- macOS（Apple Silicon 対応）
 - Python 3.12 以上
-- [uv](https://docs.astral.sh/uv/) がインストール済み
-- **Ollama 使用時**: [Ollama](https://ollama.com/) がインストール済みで起動中
-- **LM Studio 使用時**: [LM Studio](https://lmstudio.ai/) がインストール済みで、ローカルサーバーが起動中
+- 以下のいずれかのローカルLLMランタイム:
+  - [Ollama](https://ollama.com/) — 起動済みであること（`ollama serve`）
+  - [LM Studio](https://lmstudio.ai/) — ローカルサーバーが起動済みであること（Developerタブ → Server Start）
 
-## セットアップ
+## インストール
+
+### 1. リポジトリのクローン
 
 ```bash
-# 1. リポジトリをクローン or ディレクトリに移動
+git clone <リポジトリURL>
 cd llm-benchmark-script
+```
 
-# 2. 依存パッケージをインストール（仮想環境も自動作成される）
+### 2. Python 環境の準備
+
+[uv](https://docs.astral.sh/uv/) を使用する場合:
+
+```bash
 uv sync
+```
 
-# 3. 設定ファイルを作成
+pip を使用する場合:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install .
+```
+
+### 3. 環境変数の設定
+
+```bash
 cp .env.example .env
-# .env を開いて LLM_BACKEND やモデル名を設定する
 ```
 
-### Ollama の場合
+`.env` ファイルを編集し、使用するバックエンドやモデル名を設定してください。
 
-```bash
-# Ollama でモデルを取得（未取得の場合）
-ollama pull qwen3.5:9b
-ollama pull hf.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q4_K_M
-ollama pull hf.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive:Q8_0
-```
+## 設定項目
 
-### LM Studio の場合
-
-1. LM Studio を起動し、使いたいモデルをダウンロード・ロードする
-2. 「Developer」タブを開き、ローカルサーバーを起動（Start Server）する
-3. `.env` の `LLM_BACKEND` を `lmstudio` に変更する
-4. `BENCHMARK_MODELS` に LM Studio のモデル識別子を設定する（LM Studio の UI に表示される名前を使う）
-
-## 使い方
-
-```bash
-# 仮想環境を有効化して実行
-source .venv/bin/activate
-python run_benchmark.py
-```
-
-または `uv run` で直接実行：
-
-```bash
-uv run python run_benchmark.py
-```
-
-## 設定（.env）
-
-`.env` ファイルを編集して、バックエンド・モデル・ベンチマークを自由に変更できます。
+`.env` ファイルで以下の項目を設定します。詳細なテンプレートは `.env.example` を参照してください。
 
 ### 基本設定
 
@@ -99,6 +85,8 @@ uv run python run_benchmark.py
 | `GSM8K_ENABLE_COT` | Chain of Thoughtを有効にするか | `true` |
 
 ### TruthfulQA カテゴリー一覧（全38種）
+
+`TRUTHFULQA_TASKS` に指定できるカテゴリーの一覧です。カンマ区切りで複数指定できます。空欄にすると全カテゴリーが対象になります。
 
 | カテゴリー名 | 内容 |
 |---|---|
@@ -149,61 +137,94 @@ uv run python run_benchmark.py
 | `LMSTUDIO_BASE_URL` | LM Studio サーバーの URL（/v1 含む） | `http://localhost:1234/v1` |
 | `LMSTUDIO_API_KEY` | LM Studio の API キー（ダミーで可） | `lm-studio` |
 
-### LM Studio でのモデル名の確認方法
+### タイムアウト設定
 
-LM Studio の「Developer」タブでサーバーを起動すると、ロード中のモデルの識別子が表示されます。その文字列を `BENCHMARK_MODELS` に設定してください。
+ローカルLLMは応答速度が遅いため、deepeval のデフォルトタイムアウトでは不足する場合があります。環境に合わせて調整してください。
 
-例：
-```env
-LLM_BACKEND=lmstudio
-BENCHMARK_MODELS=qwen2.5-7b-instruct,llama-3.1-8b-instruct
+| 環境変数 | 説明 | デフォルト |
+|---|---|---|
+| `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE` | 1問あたりの最大待機時間（秒） | `900` |
+| `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE` | 1回のAPI呼び出しの最大待機時間（秒） | `600` |
+| `DEEPEVAL_RETRY_MAX_ATTEMPTS` | リトライ回数 | `2` |
+
+## 使い方
+
+### 実行
+
+```bash
+python run_benchmark.py
 ```
 
-## ベンチマークの説明
+または、パッケージとしてインストール済みの場合:
 
-| ベンチマーク | 内容 | 採点方式 |
-|---|---|---|
-| **MMLU** | 57科目の知識を問う多肢選択（歴史・法律・科学等） | 正解の文字（A/B/C/D）との完全一致 |
-| **TruthfulQA** | 誤解を誘う817問で嘘をつかないかを測定 | MC1: 完全一致 / MC2: 正解識別率 |
-| **GSM8K** | 小学校レベルの数学文章題（2〜8ステップの推論） | 正解の数値との完全一致 |
+```bash
+llm-benchmark
+```
 
-## 出力
+### 実行の流れ
 
-### ターミナル
+1. `.env` ファイルから設定を読み込み、バリデーションを実行
+2. バックエンド（Ollama / LM Studio）への接続確認
+3. 各モデルの動作確認（テスト生成で応答を検証）
+4. 全モデル × 全ベンチマークを順番に実行
+5. 結果をJSONファイルに保存（`results/` ディレクトリ）
+6. ターミナルに比較テーブルとタスク別詳細テーブルを表示
 
-実行完了後、比較テーブルが表示されます：
+### 出力例
+
+ターミナルには以下のような比較テーブルが表示されます:
 
 ```
 ======================================================================
  ベンチマーク結果比較（overall_score）
 ======================================================================
-+-----------------------------+--------+------+------------+
-| モデル                      | GSM8K  | MMLU | TruthfulQA |
-+-----------------------------+--------+------+------------+
-| qwen3.5:9b                  | 0.7800 | 0.72 | 0.4521     |
-| ...Aggressive:Q4_K_M        | 0.7500 | 0.70 | 0.4103     |
-| ...Aggressive:Q8_0          | 0.7700 | 0.71 | 0.4456     |
-+-----------------------------+--------+------+------------+
++--------------------+--------+--------------+--------+
+| モデル             | MMLU   | TruthfulQA   | GSM8K  |
++====================+========+==============+========+
+| gemma2:9b          | 0.6000 | 0.4133       | 0.7800 |
++--------------------+--------+--------------+--------+
+| llama3.1:8b        | 0.5333 | 0.3800       | 0.7200 |
++--------------------+--------+--------------+--------+
 ```
 
-（上記は架空の値です。実際の結果はモデルにより異なります）
+結果はJSONファイルとしても `results/benchmark_YYYYMMDD_HHMMSS.json` に保存されます。
 
-### JSON ファイル
+## ディレクトリ構成
 
-`results/benchmark_YYYYMMDD_HHMMSS.json` にタスク別スコアを含む詳細結果が保存されます。
+```
+llm-benchmark-script/
+├── run_benchmark.py      # メインエントリポイント
+├── config.py             # 環境変数の読み込み・バリデーション
+├── benchmarks.py         # ベンチマークの生成・実行ロジック
+├── reporting.py          # 結果の保存・テーブル表示
+├── models/
+│   ├── __init__.py       # バックエンド振り分けの統合インターフェース
+│   ├── ollama_model.py   # Ollama バックエンド実装
+│   └── lmstudio_model.py # LM Studio バックエンド実装
+├── results/              # ベンチマーク結果の保存先（JSON）
+│   └── .gitkeep
+├── .env.example          # 環境変数の設定テンプレート
+├── pyproject.toml        # プロジェクト定義・依存パッケージ
+├── .python-version       # Python バージョン指定（3.12）
+└── .gitignore
+```
 
-## 実行時間の目安
+## 依存パッケージ
 
-デフォルト設定（MMLU 3科目 + TruthfulQA 3カテゴリー + GSM8K 100問）の場合：
+| パッケージ | 用途 |
+|---|---|
+| [deepeval](https://github.com/confident-ai/deepeval) (>=3.8.0) | ベンチマーク実行フレームワーク |
+| [python-dotenv](https://github.com/theskumar/python-dotenv) (>=1.0.0) | `.env` ファイルの読み込み |
+| [ollama](https://github.com/ollama/ollama-python) (>=0.4.0) | Ollama Python クライアント |
+| [openai](https://github.com/openai/openai-python) (>=1.0.0) | LM Studio の OpenAI互換APIクライアント |
+| [tabulate](https://github.com/astanin/python-tabulate) (>=0.9.0) | ターミナルへのテーブル表示 |
 
-- 1モデルあたり: 20分〜40分程度
-- 3モデル合計: 1〜2時間程度
+## 注意事項
 
-時間を短縮したい場合は `.env` で `MMLU_TASKS` の科目数を減らす、`TRUTHFULQA_TASKS` のカテゴリー数を減らす、または `GSM8K_N_PROBLEMS` を小さくしてください。
-
-## メモリについて
-
-Ollama はモデルを1つずつメモリにロードし、別のモデルを使う際は自動でアンロードします。LM Studio も同様に、ロード中のモデルのみメモリを消費します。24GB のユニファイドメモリで問題なく動作します（最大でも Q8_0 版の約10GB のみ使用）。
+- ローカルLLMの応答速度はハードウェア性能に大きく依存します。GPUメモリが不足する場合、実行速度が著しく低下したりタイムアウトが発生する可能性があります。タイムアウト設定は環境に合わせて調整してください。
+- 全科目・全問での実行は非常に長時間かかります。初回は科目や問題数を絞って試すことを推奨します。
+- LM Studio バックエンドでは、LLMの応答テキストからベンチマークの正解値（A/B/C/D、数値など）を正規表現で抽出するクリーニング処理を行っています。モデルの出力形式によっては正しく抽出できない場合があります。
+- `Ctrl+C` で実行を中断できます。
 
 ## ライセンス
 
